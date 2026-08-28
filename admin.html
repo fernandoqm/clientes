@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DaLiCore — Panel de administración</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark-icon">DC</div>
+    <div class="brand-text">
+      <span class="brand-mark">DaLiCore</span>
+      <span class="brand-tag">Costa Rica</span>
+    </div>
+  </div>
+  <a class="topbar-link" href="index.html">← Formulario de registro</a>
+</div>
+
+<!-- ---------- Login ---------- -->
+<div class="login-wrap" id="login-wrap">
+  <div class="card login-card">
+    <span class="eyebrow">Acceso restringido</span>
+    <h1>Panel de administración</h1>
+    <p class="sub">Ingresa con tu correo y contraseña de administrador.</p>
+
+    <form id="login-form">
+      <div class="field">
+        <label for="login-email">Correo</label>
+        <input type="email" id="login-email" required placeholder="tucorreo@dalicore.com">
+      </div>
+      <div class="field">
+        <label for="login-pass">Contraseña</label>
+        <input type="password" id="login-pass" required placeholder="••••••••">
+      </div>
+      <div class="form-error" id="login-error"></div>
+      <button type="submit" class="btn-primary" id="login-btn">Acceder</button>
+    </form>
+  </div>
+</div>
+
+<!-- ---------- Dashboard ---------- -->
+<div class="dashboard" id="dashboard">
+
+  <div class="dash-head">
+    <div>
+      <span class="eyebrow">Clientes registrados</span>
+      <h1>Panel de administración</h1>
+    </div>
+    <button class="logout-btn" id="logout-btn">Cerrar sesión</button>
+  </div>
+
+  <div class="toolbar">
+    <div class="chip active" data-filter="todos">Todos</div>
+    <div class="chip" data-filter="pendiente">Pendiente</div>
+    <div class="chip" data-filter="active">Activo</div>
+    <div class="chip" data-filter="suspended">Suspendido</div>
+    <div class="chip" data-filter="cancelled">Cancelado</div>
+    <input class="search-input" id="search-input" type="text" placeholder="Buscar empresa...">
+  </div>
+
+  <div class="card table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>Empresa</th>
+          <th>Representante</th>
+          <th>Contacto</th>
+          <th>Registro</th>
+          <th>Plan</th>
+          <th>Vigencia</th>
+          <th>Estado</th>
+          <th>Pago</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- ---------- Drawer de detalle ---------- -->
+<div class="overlay" id="overlay"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-head">
+    <button class="drawer-close" id="drawer-close">✕</button>
+    <span class="eyebrow">Cliente</span>
+    <h2 id="d-empresa">—</h2>
+    <div class="contact-line" id="d-representante">—</div>
+  </div>
+  <div class="drawer-body">
+
+    <div class="detail-row"><span>Teléfono</span><span id="d-telefono">—</span></div>
+    <div class="detail-row"><span>Correo</span><span id="d-correo">—</span></div>
+    <div class="detail-row"><span>Comentario</span><span id="d-comentario">—</span></div>
+    <div class="detail-row"><span>Fecha de registro</span><span id="d-registro">—</span></div>
+
+    <div class="section-label">Gestión (solo administrador)</div>
+
+    <div class="field">
+      <label for="d-estado">Estado</label>
+      <select id="d-estado">
+        <option value="pendiente">Pendiente (aún no es cliente)</option>
+        <option value="active">Activo</option>
+        <option value="suspended">Suspendido</option>
+        <option value="cancelled">Cancelado</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="d-plan">Plan</label>
+      <input type="text" id="d-plan" placeholder="Ej. starter">
+    </div>
+
+    <div class="row-2">
+      <div class="field">
+        <label for="d-sub-start">Inicio de suscripción</label>
+        <input type="date" id="d-sub-start">
+      </div>
+      <div class="field">
+        <label for="d-sub-end">Fin de suscripción <span class="optional">(opcional)</span></label>
+        <input type="date" id="d-sub-end">
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="d-max-users">Usuarios máximos</label>
+      <input type="number" id="d-max-users" min="1" placeholder="Ej. 3">
+    </div>
+
+    <div class="field">
+      <label for="d-pago">Estado de pago</label>
+      <select id="d-pago">
+        <option value="pordefinir">Por definir</option>
+        <option value="aldia">Al día</option>
+        <option value="atrasado">Atrasado</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="d-notas">Notas internas</label>
+      <textarea id="d-notas" placeholder="Observaciones sobre este cliente..."></textarea>
+    </div>
+
+    <button class="save-btn" id="save-btn">Guardar cambios</button>
+    <div class="saved-flash" id="saved-flash">✓ Cambios guardados</div>
+
+  </div>
+</div>
+
+<script type="module">
+  import { auth, db } from './firebase-config.js';
+  import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+  import { collection, onSnapshot, doc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+  let clientes = [];
+  let currentFilter = 'todos';
+  let currentSearch = '';
+  let activeId = null;
+  let unsubscribeSnapshot = null;
+
+  const loginWrap = document.getElementById('login-wrap');
+  const dashboard = document.getElementById('dashboard');
+  const loginForm = document.getElementById('login-form');
+  const loginError = document.getElementById('login-error');
+  const loginBtn = document.getElementById('login-btn');
+
+  // ---- Login con Firebase Authentication ----
+  loginForm.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    loginError.style.display = 'none';
+    loginBtn.disabled = true;
+    loginBtn.textContent = 'Ingresando...';
+
+    try {
+      await signInWithEmailAndPassword(
+        auth,
+        document.getElementById('login-email').value.trim(),
+        document.getElementById('login-pass').value
+      );
+    } catch (err) {
+      loginError.textContent = 'Correo o contraseña incorrectos.';
+      loginError.style.display = 'block';
+    }
+
+    loginBtn.disabled = false;
+    loginBtn.textContent = 'Acceder';
+  });
+
+  document.getElementById('logout-btn').addEventListener('click', function () {
+    signOut(auth);
+  });
+
+  onAuthStateChanged(auth, function (user) {
+    if (user) {
+      loginWrap.style.display = 'none';
+      dashboard.style.display = 'block';
+      loginForm.reset();
+      subscribeClientes();
+    } else {
+      dashboard.style.display = 'none';
+      loginWrap.style.display = 'flex';
+      if (unsubscribeSnapshot) { unsubscribeSnapshot(); unsubscribeSnapshot = null; }
+      clientes = [];
+    }
+  });
+
+  // ---- Datos en vivo desde Firestore ----
+  function subscribeClientes() {
+    const q = query(collection(db, 'clientes'), orderBy('createdAt', 'desc'));
+    unsubscribeSnapshot = onSnapshot(q, function (snapshot) {
+      clientes = snapshot.docs.map(function (d) {
+        return Object.assign({ id: d.id }, d.data());
+      });
+      render();
+    }, function (err) {
+      console.error('Error leyendo clientes:', err);
+    });
+  }
+
+  // ---- Filtros ----
+  document.querySelectorAll('.chip').forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      currentFilter = chip.dataset.filter;
+      render();
+    });
+  });
+
+  document.getElementById('search-input').addEventListener('input', function (e) {
+    currentSearch = e.target.value.toLowerCase();
+    render();
+  });
+
+  const estadoLabel = { pendiente: 'Pendiente', active: 'Activo', suspended: 'Suspendido', cancelled: 'Cancelado' };
+  const estadoClass = { pendiente: 'pendiente', active: 'activo', suspended: 'suspendido', cancelled: 'cancelado' };
+  const pagoLabel = { aldia: 'Al día', atrasado: 'Atrasado', pordefinir: 'Por definir' };
+  const pagoClass = { aldia: 'pay-aldia', atrasado: 'pay-atrasado', pordefinir: 'pay-pordefinir' };
+
+  function fmtFecha(f) {
+    if (!f) return '—';
+    const [y, m, d] = f.split('-');
+    return d + '/' + m + '/' + y;
+  }
+
+  function fmtRegistro(c) {
+    if (c.createdAt && typeof c.createdAt.toDate === 'function') {
+      const d = c.createdAt.toDate();
+      const dd = String(d.getDate()).padStart(2, '0');
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      return dd + '/' + mm + '/' + d.getFullYear();
+    }
+    return '—';
+  }
+
+  function initialOf(nombre) {
+    return (nombre || '?').trim().charAt(0).toUpperCase();
+  }
+
+  function vigenciaCell(c) {
+    if (!c.subStart) return '<span class="muted">—</span>';
+    const hasta = c.subEnd ? fmtFecha(c.subEnd) : 'sin vencimiento';
+    return '<div class="vigencia">' + fmtFecha(c.subStart) + '<br><span class="to">→ ' + hasta + '</span></div>';
+  }
+
+  function render() {
+    const tbody = document.getElementById('table-body');
+    tbody.innerHTML = '';
+
+    const filtered = clientes.filter(function (c) {
+      const matchesFilter = currentFilter === 'todos' || c.estado === currentFilter;
+      const matchesSearch = (c.empresa || '').toLowerCase().includes(currentSearch);
+      return matchesFilter && matchesSearch;
+    });
+
+    filtered.forEach(function (c) {
+      const tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td><div class="company-cell"><div class="company-avatar">' + initialOf(c.empresa) + '</div><span class="company-name">' + c.empresa + '</span></div></td>' +
+        '<td>' + c.representante + '</td>' +
+        '<td class="muted">' + c.telefono + '<br>' + c.correo + '</td>' +
+        '<td>' + fmtRegistro(c) + '</td>' +
+        '<td>' + (c.plan ? '<span class="plan-pill">' + c.plan + '</span>' : '<span class="muted">—</span>') + '</td>' +
+        '<td>' + vigenciaCell(c) + '</td>' +
+        '<td><span class="status-badge status-' + estadoClass[c.estado] + '">' + estadoLabel[c.estado] + '</span></td>' +
+        '<td><span class="pay-badge ' + pagoClass[c.pago] + '">' + pagoLabel[c.pago] + '</span></td>';
+      tr.addEventListener('click', function () { openDrawer(c.id); });
+      tbody.appendChild(tr);
+    });
+
+    if (filtered.length === 0) {
+      const tr = document.createElement('tr');
+      const msg = clientes.length === 0 ? 'Aún no hay clientes registrados' : 'Sin resultados';
+      tr.innerHTML = '<td colspan="8" class="muted" style="text-align:center; padding:28px;">' + msg + '</td>';
+      tbody.appendChild(tr);
+    }
+  }
+
+  // ---- Drawer de detalle ----
+  function openDrawer(id) {
+    activeId = id;
+    const c = clientes.find(function (x) { return x.id === id; });
+
+    document.getElementById('d-empresa').textContent = c.empresa;
+    document.getElementById('d-representante').textContent = c.representante;
+    document.getElementById('d-telefono').textContent = c.telefono;
+    document.getElementById('d-correo').textContent = c.correo;
+    document.getElementById('d-comentario').textContent = c.notas || '—';
+    document.getElementById('d-registro').textContent = fmtRegistro(c);
+    document.getElementById('d-estado').value = c.estado || 'pendiente';
+    document.getElementById('d-plan').value = c.plan || '';
+    document.getElementById('d-sub-start').value = c.subStart || '';
+    document.getElementById('d-sub-end').value = c.subEnd || '';
+    document.getElementById('d-max-users').value = c.maxUsers || '';
+    document.getElementById('d-pago').value = c.pago || 'pordefinir';
+    document.getElementById('d-notas').value = c.notas || '';
+    document.getElementById('saved-flash').style.display = 'none';
+
+    document.getElementById('drawer').classList.add('open');
+    document.getElementById('overlay').classList.add('open');
+  }
+
+  function closeDrawer() {
+    document.getElementById('drawer').classList.remove('open');
+    document.getElementById('overlay').classList.remove('open');
+    activeId = null;
+  }
+
+  document.getElementById('drawer-close').addEventListener('click', closeDrawer);
+  document.getElementById('overlay').addEventListener('click', closeDrawer);
+
+  document.getElementById('save-btn').addEventListener('click', async function () {
+    if (activeId === null) return;
+    const saveBtn = document.getElementById('save-btn');
+    const savedFlash = document.getElementById('saved-flash');
+    const maxUsersRaw = document.getElementById('d-max-users').value;
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Guardando...';
+    savedFlash.style.display = 'none';
+
+    try {
+      await updateDoc(doc(db, 'clientes', activeId), {
+        estado: document.getElementById('d-estado').value,
+        plan: document.getElementById('d-plan').value.trim(),
+        subStart: document.getElementById('d-sub-start').value,
+        subEnd: document.getElementById('d-sub-end').value,
+        maxUsers: maxUsersRaw ? Number(maxUsersRaw) : '',
+        pago: document.getElementById('d-pago').value,
+        notas: document.getElementById('d-notas').value.trim()
+      });
+      savedFlash.style.display = 'block';
+    } catch (err) {
+      console.error(err);
+      alert('No se pudo guardar el cambio. Intenta de nuevo.');
+    }
+
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Guardar cambios';
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DaLiCore — Registro de empresa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="auth-split">
+
+  <div class="auth-art">
+    <div class="brand">
+      <div class="brand-mark-icon">DC</div>
+      <div class="brand-text">
+        <span class="brand-mark" style="color:#fff">DaLiCore</span>
+        <span class="brand-tag">Costa Rica</span>
+      </div>
+    </div>
+
+    <div class="auth-art-copy">
+      <span class="eyebrow">Software para talleres de serigrafía</span>
+      <h1>Gestiona pedidos, clientes y cobros en un solo lugar.</h1>
+      <p>Somos DaLiCore, una empresa de desarrollo de software. Registra tu empresa y te contactamos para activar tu cuenta.</p>
+      <ul class="auth-art-features">
+        <li>Gestión de pedidos y clientes</li>
+        <li>Cuentas por cobrar y recibos</li>
+        <li>Catálogo y seguimiento de producción</li>
+      </ul>
+    </div>
+
+    <div class="auth-art-footer">© 2026 DaLiCore — Desarrollo de software</div>
+  </div>
+
+  <div class="auth-form-panel">
+    <a class="corner-link" href="admin.html">Administración</a>
+
+    <div class="auth-form-inner">
+
+      <form id="signup-form">
+        <span class="eyebrow">Nuevo cliente</span>
+        <h1>¿Empresa nueva con nosotros?</h1>
+        <p class="lede">Regístrate para que activemos tu acceso al sistema.</p>
+
+        <div class="field">
+          <label for="empresa">Nombre de la empresa</label>
+          <input type="text" id="empresa" required placeholder="Ej. Serigrafía Central">
+        </div>
+
+        <div class="field">
+          <label for="representante">Nombre del representante</label>
+          <input type="text" id="representante" required placeholder="Ej. María Rodríguez">
+        </div>
+
+        <div class="field">
+          <label for="telefono">Teléfono</label>
+          <input type="tel" id="telefono" required placeholder="8888-8888">
+        </div>
+
+        <div class="field">
+          <label for="correo">Correo</label>
+          <input type="email" id="correo" required placeholder="correo@empresa.com">
+        </div>
+
+        <div class="field">
+          <label for="comentario">Comentario <span class="optional">(opcional)</span></label>
+          <textarea id="comentario" placeholder="Cuéntanos qué necesitas..."></textarea>
+        </div>
+
+        <div class="toggle-row">
+          <p>Quiero que me contacten por WhatsApp para dar seguimiento.</p>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggle-whatsapp" checked>
+            <span class="track"></span>
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <p>Acepto que guarden mis datos para gestionar mi registro.</p>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggle-consent" checked>
+            <span class="track"></span>
+          </label>
+        </div>
+
+        <div class="form-error" id="form-error"></div>
+
+        <button type="submit" class="btn-primary" id="submit-btn" style="margin-top:22px;">Enviar solicitud</button>
+      </form>
+
+      <div class="confirm" id="confirm-block">
+        <div class="confirm-badge">✓</div>
+        <h2>¡Gracias!</h2>
+        <p>Recibimos tus datos, te contactaremos pronto para activar tu cuenta.</p>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+  import { db } from './firebase-config.js';
+  import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+  const form = document.getElementById('signup-form');
+  const submitBtn = document.getElementById('submit-btn');
+  const errorBox = document.getElementById('form-error');
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    errorBox.style.display = 'none';
+
+    if (!document.getElementById('toggle-consent').checked) {
+      errorBox.textContent = 'Debes aceptar que guardemos tus datos para continuar.';
+      errorBox.style.display = 'block';
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Enviando...';
+
+    try {
+      await addDoc(collection(db, 'clientes'), {
+        empresa: document.getElementById('empresa').value.trim(),
+        representante: document.getElementById('representante').value.trim(),
+        telefono: document.getElementById('telefono').value.trim(),
+        correo: document.getElementById('correo').value.trim(),
+        notas: document.getElementById('comentario').value.trim(),
+        contactoWhatsapp: document.getElementById('toggle-whatsapp').checked,
+        estado: 'pendiente',
+        plan: '',
+        subStart: '',
+        subEnd: '',
+        maxUsers: '',
+        pago: 'pordefinir',
+        createdAt: serverTimestamp()
+      });
+
+      form.style.display = 'none';
+      document.getElementById('confirm-block').style.display = 'block';
+    } catch (err) {
+      console.error(err);
+      errorBox.textContent = 'Hubo un problema al enviar tu registro. Intenta de nuevo.';
+      errorBox.style.display = 'block';
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Enviar solicitud';
+    }
+  });
+</script>
+
+</body>
+</html>
