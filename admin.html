@@ -95,9 +95,26 @@
   </div>
   <div class="drawer-body">
 
-    <div class="detail-row"><span>Teléfono</span><span id="d-telefono">—</span></div>
-    <div class="detail-row"><span>Correo</span><span id="d-correo">—</span></div>
-    <div class="detail-row"><span>Comentario</span><span id="d-comentario">—</span></div>
+    <div class="field">
+      <label for="d-empresa-input">Nombre de la empresa</label>
+      <input type="text" id="d-empresa-input">
+    </div>
+
+    <div class="field">
+      <label for="d-representante-input">Representante</label>
+      <input type="text" id="d-representante-input">
+    </div>
+
+    <div class="field">
+      <label for="d-telefono-input">Teléfono</label>
+      <input type="tel" id="d-telefono-input">
+    </div>
+
+    <div class="field">
+      <label for="d-correo-input">Correo</label>
+      <input type="email" id="d-correo-input">
+    </div>
+
     <div class="detail-row"><span>Fecha de registro</span><span id="d-registro">—</span></div>
 
     <div class="section-label">Gestión (solo administrador)</div>
@@ -150,13 +167,15 @@
     <button class="save-btn" id="save-btn">Guardar cambios</button>
     <div class="saved-flash" id="saved-flash">✓ Cambios guardados</div>
 
+    <button class="delete-btn" id="delete-btn">Eliminar cliente</button>
+
   </div>
 </div>
 
 <script type="module">
   import { auth, db } from './firebase-config.js';
   import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
-  import { collection, onSnapshot, doc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+  import { collection, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
   let clientes = [];
   let currentFilter = 'todos';
@@ -309,9 +328,10 @@
 
     document.getElementById('d-empresa').textContent = c.empresa;
     document.getElementById('d-representante').textContent = c.representante;
-    document.getElementById('d-telefono').textContent = c.telefono;
-    document.getElementById('d-correo').textContent = c.correo;
-    document.getElementById('d-comentario').textContent = c.notas || '—';
+    document.getElementById('d-empresa-input').value = c.empresa || '';
+    document.getElementById('d-representante-input').value = c.representante || '';
+    document.getElementById('d-telefono-input').value = c.telefono || '';
+    document.getElementById('d-correo-input').value = c.correo || '';
     document.getElementById('d-registro').textContent = fmtRegistro(c);
     document.getElementById('d-estado').value = c.estado || 'pendiente';
     document.getElementById('d-plan').value = c.plan || '';
@@ -321,6 +341,10 @@
     document.getElementById('d-pago').value = c.pago || 'pordefinir';
     document.getElementById('d-notas').value = c.notas || '';
     document.getElementById('saved-flash').style.display = 'none';
+
+    const deleteBtn = document.getElementById('delete-btn');
+    deleteBtn.disabled = false;
+    deleteBtn.textContent = 'Eliminar cliente';
 
     document.getElementById('drawer').classList.add('open');
     document.getElementById('overlay').classList.add('open');
@@ -347,6 +371,10 @@
 
     try {
       await updateDoc(doc(db, 'clientes', activeId), {
+        empresa: document.getElementById('d-empresa-input').value.trim(),
+        representante: document.getElementById('d-representante-input').value.trim(),
+        telefono: document.getElementById('d-telefono-input').value.trim(),
+        correo: document.getElementById('d-correo-input').value.trim(),
         estado: document.getElementById('d-estado').value,
         plan: document.getElementById('d-plan').value.trim(),
         subStart: document.getElementById('d-sub-start').value,
@@ -355,6 +383,8 @@
         pago: document.getElementById('d-pago').value,
         notas: document.getElementById('d-notas').value.trim()
       });
+      document.getElementById('d-empresa').textContent = document.getElementById('d-empresa-input').value.trim();
+      document.getElementById('d-representante').textContent = document.getElementById('d-representante-input').value.trim();
       savedFlash.style.display = 'block';
     } catch (err) {
       console.error(err);
@@ -363,6 +393,27 @@
 
     saveBtn.disabled = false;
     saveBtn.textContent = 'Guardar cambios';
+  });
+
+  document.getElementById('delete-btn').addEventListener('click', async function () {
+    if (activeId === null) return;
+    const c = clientes.find(function (x) { return x.id === activeId; });
+    const confirmado = confirm('¿Eliminar definitivamente a "' + (c ? c.empresa : '') + '"? Esta acción no se puede deshacer.');
+    if (!confirmado) return;
+
+    const deleteBtn = document.getElementById('delete-btn');
+    deleteBtn.disabled = true;
+    deleteBtn.textContent = 'Eliminando...';
+
+    try {
+      await deleteDoc(doc(db, 'clientes', activeId));
+      closeDrawer();
+    } catch (err) {
+      console.error(err);
+      alert('No se pudo eliminar. Intenta de nuevo.');
+      deleteBtn.disabled = false;
+      deleteBtn.textContent = 'Eliminar cliente';
+    }
   });
 </script>
 

@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -96,6 +97,7 @@
         <div class="confirm-badge">✓</div>
         <h2>¡Gracias!</h2>
         <p>Recibimos tus datos, te contactaremos pronto para activar tu cuenta.</p>
+        <a class="btn-whatsapp" id="whatsapp-cta" target="_blank" rel="noopener">Avisar por WhatsApp</a>
       </div>
 
     </div>
@@ -106,6 +108,15 @@
 <script type="module">
   import { db } from './firebase-config.js';
   import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+  // Aviso automático por correo (EmailJS, gratis hasta 200 correos/mes).
+  // Reemplace estos 3 valores con los suyos de https://dashboard.emailjs.com
+  const EMAILJS_PUBLIC_KEY = 'TU_PUBLIC_KEY';
+  const EMAILJS_SERVICE_ID = 'TU_SERVICE_ID';
+  const EMAILJS_TEMPLATE_ID = 'TU_TEMPLATE_ID';
+  const ADMIN_EMAIL = 'fernando.quesadam@gmail.com';
+
+  if (window.emailjs) emailjs.init(EMAILJS_PUBLIC_KEY);
 
   const form = document.getElementById('signup-form');
   const submitBtn = document.getElementById('submit-btn');
@@ -124,12 +135,17 @@
     submitBtn.disabled = true;
     submitBtn.textContent = 'Enviando...';
 
+    const empresa = document.getElementById('empresa').value.trim();
+    const representante = document.getElementById('representante').value.trim();
+    const telefono = document.getElementById('telefono').value.trim();
+    const correo = document.getElementById('correo').value.trim();
+
     try {
       await addDoc(collection(db, 'clientes'), {
-        empresa: document.getElementById('empresa').value.trim(),
-        representante: document.getElementById('representante').value.trim(),
-        telefono: document.getElementById('telefono').value.trim(),
-        correo: document.getElementById('correo').value.trim(),
+        empresa: empresa,
+        representante: representante,
+        telefono: telefono,
+        correo: correo,
         notas: document.getElementById('comentario').value.trim(),
         contactoWhatsapp: document.getElementById('toggle-whatsapp').checked,
         estado: 'pendiente',
@@ -140,6 +156,24 @@
         pago: 'pordefinir',
         createdAt: serverTimestamp()
       });
+
+      const mensaje = 'Hola, acabo de registrar mi empresa en DaLiCore:\n' +
+        'Empresa: ' + empresa + '\n' +
+        'Representante: ' + representante + '\n' +
+        'Teléfono: ' + telefono;
+      document.getElementById('whatsapp-cta').href =
+        'https://wa.me/50685646198?text=' + encodeURIComponent(mensaje);
+
+      if (window.emailjs) {
+        emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+          to_email: ADMIN_EMAIL,
+          empresa: empresa,
+          representante: representante,
+          telefono: telefono,
+          correo: correo,
+          comentario: document.getElementById('comentario').value.trim() || '(sin comentario)'
+        }).catch(function (err) { console.error('EmailJS:', err); });
+      }
 
       form.style.display = 'none';
       document.getElementById('confirm-block').style.display = 'block';

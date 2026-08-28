@@ -344,6 +344,27 @@ h1, h2 { font-family: var(--serif); }
   margin: 0;
 }
 
+.btn-whatsapp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+  padding: 12px 22px;
+  background: #25d366;
+  color: #0b1a10;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+  transition: transform .12s, box-shadow .12s;
+}
+
+.btn-whatsapp:hover {
+  box-shadow: 0 8px 18px -8px rgba(37,211,102,0.55);
+  transform: translateY(-1px);
+}
+
 /* ---------- Layout dividido (registro público) ---------- */
 
 .auth-split {
@@ -770,3 +791,21 @@ tbody tr:hover { background: #faf7ee; }
   color: var(--ok);
   text-align: center;
 }
+
+.delete-btn {
+  width: 100%;
+  margin-top: 26px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  background: none;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+  color: var(--danger);
+  font-weight: 600;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+
+.delete-btn:hover { text-decoration: underline; }
+.delete-btn:disabled { opacity: 0.5; cursor: default; text-decoration: none; }
