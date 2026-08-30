@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DaLiCore — Tienda de apps</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark-icon">DC</div>
+    <div class="brand-text">
+      <span class="brand-mark">DaLiCore</span>
+      <span class="brand-tag">Tienda de apps</span>
+    </div>
+  </div>
+  <a class="topbar-link" href="index.html">Registro de clientes</a>
+</div>
+
+<div class="store-hero">
+  <span class="eyebrow">Descargas</span>
+  <h1>Nuestras aplicaciones</h1>
+  <p>Descarga directa, sin tiendas de terceros. Si es la primera vez que instalas una app de DaLiCore, tu teléfono te pedirá permiso para instalar desde un origen desconocido — es normal, más abajo te explicamos cómo.</p>
+</div>
+
+<div class="store-list">
+
+  <div class="card app-card">
+    <img class="app-icon" src="assets/grafika-icon.png" alt="Ícono de Grafika">
+    <div class="app-info">
+      <div class="app-info-head">
+        <h2>Grafika</h2>
+        <span class="app-version" id="app-version">v1.0.0</span>
+      </div>
+      <p class="app-tagline">Gestión de pedidos, clientes y producción para talleres de serigrafía.</p>
+      <div class="app-meta">
+        <span id="app-size">Android 8.0+</span>
+        <span id="app-updated"></span>
+      </div>
+      <a class="btn-download" id="app-download" href="https://github.com/fernandoqm/clientes/releases/latest/download/grafika.apk">⭳ Descargar APK</a>
+    </div>
+  </div>
+
+</div>
+
+<div class="store-steps card" style="padding:26px 30px; max-width:640px; margin:0 auto 64px;">
+  <div class="section-label">Cómo instalar</div>
+  <ol>
+    <li>Toca "Descargar APK" — el archivo se guarda en tu carpeta de descargas.</li>
+    <li>Ábrelo desde el navegador o desde "Archivos". Si aparece un aviso de "orígenes desconocidos", toca <strong>Configuración</strong> y permite instalar desde esa app (solo se pide la primera vez).</li>
+    <li>Toca <strong>Instalar</strong> y espera a que termine. Ya puedes abrir Grafika.</li>
+  </ol>
+</div>
+
+<script>
+  // Auto-completa versión, fecha y tamaño desde el último release de GitHub.
+  // Si falla (sin internet, límite de la API), se queda con el link fijo de arriba.
+  (async function () {
+    try {
+      const res = await fetch('https://api.github.com/repos/fernandoqm/clientes/releases/latest');
+      if (!res.ok) return;
+      const data = await res.json();
+      const asset = (data.assets || []).find(a => a.name === 'grafika.apk');
+      if (data.tag_name) document.getElementById('app-version').textContent = data.tag_name;
+      if (data.published_at) {
+        const d = new Date(data.published_at);
+        document.getElementById('app-updated').textContent =
+          'Actualizado ' + d.toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' });
+      }
+      if (asset) {
+        const mb = (asset.size / (1024 * 1024)).toFixed(1);
+        document.getElementById('app-size').textContent = 'Android 8.0+ · ' + mb + ' MB';
+        document.getElementById('app-download').href = asset.browser_download_url;
+      }
+    } catch (err) {
+      console.error('No se pudo consultar el último release:', err);
+    }
+  })();
+</script>
+
+</body>
+</html>
